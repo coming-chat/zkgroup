@@ -1,4 +1,4 @@
-module github.com/nanu-c/zkgroup
+module github.com/coming-chat/zkgroup
 
 go 1.15
 
