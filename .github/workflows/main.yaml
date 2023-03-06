@@ -7,22 +7,31 @@ jobs:
     name: Build zkgroup
     strategy:
       matrix:
-        target:
-          - x86_64-unknown-linux-gnu
-          - aarch64-unknown-linux-gnu
-          - armv7-unknown-linux-gnueabihf
+        include:
+          - target: x86_64-unknown-linux-gnu
+            rust: nightly
+            os: ubuntu-latest
+          - target: aarch64-unknown-linux-gnu
+            rust: nightly
+            os: ubuntu-latest
+          - target: armv7-unknown-linux-gnueabihf
+            rust: nightly
+            os: ubuntu-latest
+          - target: aarch64-apple-darwin
+            rust: nightly
+            os: macos-latest
 
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Check out code
         uses: actions/checkout@v2
         with:
           submodules: recursive
 
-      - name: Setup rust nightly toolchain
+      - name: Setup rust toolchain
         uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly
+          toolchain: ${{ matrix.rust }}
           target: ${{ matrix.target }}
           override: true
 
@@ -34,6 +43,8 @@ jobs:
         if: ${{ matrix.target == 'armv7-unknown-linux-gnueabihf' }}
         run: sudo apt install gcc-arm-linux-gnueabihf
 
+      - run: rustup target add ${{ matrix.target }}
+
       - name: Build zkgroup library
         uses: actions-rs/cargo@v1
         with:
@@ -44,11 +55,20 @@ jobs:
       - name: List build output
         run: ls -la lib/zkgroup/target/${{ matrix.target }}/release
 
-      - name: Upload built artifact
+      - name: Upload built artifact linux
+        if: ${{ matrix.os == 'ubuntu-latest'}}
         uses: actions/upload-artifact@v2
         with:
           name: zkgroup-${{ matrix.target }}
           path: lib/zkgroup/target/${{ matrix.target }}/release/libzkgroup.so
+          if-no-files-found: error
+
+      - name: Upload built artifact macos
+        if: ${{ matrix.os == 'macos-latest'}}
+        uses: actions/upload-artifact@v2
+        with:
+          name: zkgroup-${{ matrix.target }}
+          path: lib/zkgroup/target/${{ matrix.target }}/release/libzkgroup.dylib
           if-no-files-found: error
 
   release:
@@ -120,4 +140,14 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./build-artifacts/zkgroup-armv7-unknown-linux-gnueabihf/libzkgroup.so
           asset_name: libzkgroup_linux_armv7_${{ env.VERSION }}.so
+          asset_content_type: application/octet-stream
+
+      - name: Add zkgroup to release (aarch64-darwin)
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./build-artifacts/aarch64-apple-darwin/libzkgroup.dylib
+          asset_name: libzkgroup_darwin_arm64_${{ env.VERSION }}.dylib
           asset_content_type: application/octet-stream
