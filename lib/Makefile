@@ -12,3 +12,5 @@ build-cross:
 	@mv -f zkgroup/target/armv7-unknown-linux-gnueabihf/release/libzkgroup.so ./libzkgroup_linux_armv7.so || true
 	@cd zkgroup && cross build --target x86_64-unknown-linux-gnu --release --verbose --jobs=4
 	@mv -f zkgroup/target/x86_64-unknown-linux-gnu/release/libzkgroup.so ./libzkgroup_linux_x86_64.so || true
+	@cd zkgroup && cross build --target aarch64-apple-darwin --release --verbose --jobs=4
+	@mv -f zkgroup/target/aarch64-apple-darwin/release/libzkgroup.dylib ./libzkgroup_darwin_aarch64.dylib || true
