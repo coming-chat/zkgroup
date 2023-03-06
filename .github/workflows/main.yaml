@@ -73,6 +73,7 @@ jobs:
 
   update-lib:
     name: update lib in project after build
+    if: !startsWith(github.ref, 'refs/tags/v')
     needs:
       - build-zkgroup
     runs-on: ubuntu-latest
