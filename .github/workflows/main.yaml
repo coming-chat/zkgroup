@@ -55,6 +55,20 @@ jobs:
       - name: List build output
         run: ls -la lib/zkgroup/target/${{ matrix.target }}/release
 
+      - name: get zkgroup.h file
+        if: ${{ matrix.target == 'aarch64-unknown-linux-gnu'}}
+        run: |
+          apt install -y make cbindgen 
+          make -f ../../../ffi/c/Makefile -C ./rust/src/ffi/ zkgroup.h
+
+      - name: Upload zkgroup.h
+        if: ${{ matrix.target == 'aarch64-unknown-linux-gnu'}}
+        uses: actions/upload-artifact@v2
+        with:
+          name: c-header
+          path: ./rust/src/ffi/zkgroup.h
+          if-no-files-found: error
+
       - name: Upload built artifact linux
         if: ${{ matrix.os == 'ubuntu-latest'}}
         uses: actions/upload-artifact@v2
@@ -100,6 +114,7 @@ jobs:
           cp ./build-artifacts/zkgroup-aarch64-unknown-linux-gnu/libzkgroup.so ./lib/libzkgroup_linux_aarch64.so
           cp ./build-artifacts/zkgroup-armv7-unknown-linux-gnueabihf/libzkgroup.so ./lib/libzkgroup_linux_armv7.so
           cp ./build-artifacts/zkgroup-aarch64-apple-darwin/libzkgroup.dylib ./lib/libzkgroup_darwin_aarch64.dylib
+          cp ./build-artifacts/c-header/zkgroup.h ./lib/zkgroup.h
       - name: git diff check
         id: verify_diff
         run: |
