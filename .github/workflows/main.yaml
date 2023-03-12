@@ -58,7 +58,7 @@ jobs:
       - name: get zkgroup.h file
         if: ${{ matrix.target == 'aarch64-unknown-linux-gnu'}}
         run: |
-          apt install -y make cbindgen 
+          cargo install --force cbindgen
           make -f ../../../ffi/c/Makefile -C ./rust/src/ffi/ zkgroup.h
 
       - name: Upload zkgroup.h
